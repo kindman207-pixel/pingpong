@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "db:push": "node scripts/apply-migrations.mjs",
     "db:seed": "node scripts/seed.mjs",
-    "db:seed:admin": "node scripts/seed-admin.mjs"
+    "db:seed:admin": "node scripts/seed-admin.mjs",
+    "db:confirm-users": "node scripts/confirm-users.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

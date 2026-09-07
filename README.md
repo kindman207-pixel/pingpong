@@ -41,7 +41,15 @@ npm run db:push
 > 追加された `0004_accounts_admin.sql`（アバター保管・運営管理者・決済履歴）が必要です。
 > すべて `if not exists` / `create or replace` で書かれているため、再実行しても安全です。
 
-### ② 運営管理者アカウントを作成する
+### ② 既存の未確認ユーザーを解放する（任意）
+
+この変更より前に登録し、確認メールのリンクを踏んでいないユーザーがいる場合のみ実行します。
+
+```bash
+npm run db:confirm-users
+```
+
+### ③ 運営管理者アカウントを作成する
 
 ```bash
 npm run db:seed:admin
@@ -59,7 +67,7 @@ npm run db:seed:admin
 
 別の値にする場合: `npm run db:seed:admin -- you@example.com "YourPassw0rd"`
 
-### ③ デモデータを入れる（任意・推奨）
+### ④ デモデータを入れる（任意・推奨）
 
 すべての画面に実データが入った状態で確認できます。
 
@@ -67,7 +75,7 @@ npm run db:seed:admin
 npm run db:seed -- demo@example.com "Passw0rd-demo"
 ```
 
-### ④ 開発サーバー
+### ⑤ 開発サーバー
 
 ```bash
 npm install
@@ -346,3 +354,26 @@ npm run db:seed     # デモデータ投入
   切り替えられます。変更時は現在のパスワードで本人確認を行います。
 - **ヘッダー** — アバターと氏名・組織名を常時表示。クリックすると権限バッジつきの
   プロフィール概要と、アカウント編集・設定・ご契約・運営管理への導線が開きます。
+
+---
+
+## 11. 新規登録とメール確認について
+
+**確認メール（認証リンク）は送信しません。登録後そのままログインできます。**
+
+登録はクライアントの `auth.signUp()` ではなく、サーバー側の
+[`/api/auth/signup`](src/app/api/auth/signup/route.ts) が service role で
+`createUser({ email_confirm: true })` を実行します。作成時点で確認済みになるため、
+Supabase 側の「Confirm email」設定がONのままでも確認メールは送信されません。
+
+登録処理の流れ:
+
+1. `/api/auth/signup` — 入力検証 → ユーザー作成（確認済み）→ 組織・広報対象・初期レコードを作成
+2. クライアントが `signInWithPassword` でそのままログイン
+3. アバターを選んでいれば、認証後に自分のフォルダへ保存
+
+組織の作成に失敗した場合は、作成したユーザーを削除して再登録できる状態に戻します
+（中途半端なアカウントを残しません）。
+
+未認証のまま画像を置ける経路（`avatars/pending/`）は不要になったため、
+`0005_signup_no_email.sql` で削除しています。
